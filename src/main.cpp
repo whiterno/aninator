@@ -3,7 +3,7 @@
 #include "../include/akinator.h"
 
 int main(){
-    playAkinator();
+    playAkinator("database/main_db.db");
 
     return 0;
 }

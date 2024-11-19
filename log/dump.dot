@@ -1,0 +1,17 @@
+digraph D{
+	rankdir = TB
+
+	node_7 [color = "darkgreen", style = "filled", shape = "record", fillcolor = "white", label = "{Животное | {<fl7> left | <fr7> right}}"]
+	node_7: <fl7> -> node_6 [color = "black", arrowhead = "normal"]
+	node_6 [color = "darkgreen", style = "filled", shape = "record", fillcolor = "white", label = "{опасное | {<fl6> left | <fr6> right}}"]
+	node_6: <fl6> -> node_5 [color = "black", arrowhead = "normal"]
+	node_5 [color = "darkgreen", style = "filled", shape = "record", fillcolor = "white", label = "{Калиныч | {<fl5> left | <fr5> right}}"]
+	node_6: <fr6> -> node_4 [color = "black", arrowhead = "normal"]
+	node_4 [color = "darkgreen", style = "filled", shape = "record", fillcolor = "white", label = "{Кот | {<fl4> left | <fr4> right}}"]
+	node_7: <fr7> -> node_3 [color = "black", arrowhead = "normal"]
+	node_3 [color = "darkgreen", style = "filled", shape = "record", fillcolor = "white", label = "{кусается | {<fl3> left | <fr3> right}}"]
+	node_3: <fl3> -> node_2 [color = "black", arrowhead = "normal"]
+	node_2 [color = "darkgreen", style = "filled", shape = "record", fillcolor = "white", label = "{DED | {<fl2> left | <fr2> right}}"]
+	node_3: <fr3> -> node_1 [color = "black", arrowhead = "normal"]
+	node_1 [color = "darkgreen", style = "filled", shape = "record", fillcolor = "white", label = "{AnaToliy | {<fl1> left | <fr1> right}}"]
+}

@@ -1,5 +1,13 @@
-#ifndef BINARY_HANDBOOK_H
-#define BINARY_HANDBOOK_H
+#ifndef AKINATOR_H
+#define AKINATOR_H
+
+#define INIT(binDatabase) , #binDatabase, __FILE__, __func__, __LINE__
+#define INIT_ARGS , const char* name, const char* filename, const char* funcname, size_t line
+#define INIT_DEBUG_VARS(binDatabase) (*binDatabase)->name = name; (*binDatabase)->filename = filename; (*binDatabase)->funcname = funcname; (*binDatabase)->line = line;
+#define DUMP(binDatabase) binDatabase, __FILE__, __func__, __LINE__
+
+const int BIG_ARR_ELEM_CAPACITY = 128;
+const int BIG_ARR_BEG_CAPACITY  = 4;
 
 //! @brief Node structure, that contains pointers on left, right and parent nodes and a feature
 struct Node{
@@ -7,6 +15,11 @@ struct Node{
     Node* parent;           ///< pointer on the parent node in tree
     Node* left;             ///< pointer on the left node in tree (its data is less or equal than this node's data)
     Node* right;            ///< pointer on the right node in tree (its data is bigger than this node's data)
+};
+
+struct BigArrElem{
+    char* beg;
+    char* end;
 };
 
 //! @brief Main structure with debug info, pointer on tree's root and amount of nodes in tree
@@ -17,6 +30,8 @@ struct BinDatabase{
     size_t line;            ///< serial number of line where tree was initialized
 
     Node* root;             ///< pointer on tree's root
+    BigArrElem* big_array;
+    size_t big_array_capacity;
     int nodes_amount;       ///< amount of nodes in tree
 };
 
@@ -24,8 +39,23 @@ enum Errors{
     NO_ERROR,
     NULL_VALUE_INSERTED,
     NO_SUCH_FILE,
+    NO_DATA_BASE,
+    FAT_FEATURE,
+    FILE_NOT_OPEN,
+    CYCLE_IN_TREE,
 };
 
-int playAkinator();
+enum Emptiness{
+    NOT_EMPTY,
+    EMPTY,
+};
+
+enum Mode{
+    GUESS,
+    DEFINITION,
+    DIFFERENCE,
+};
+
+int playAkinator(const char* db_filename);
 
 #endif
