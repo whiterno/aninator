@@ -1,10 +1,10 @@
 #ifndef AKINATOR_H
 #define AKINATOR_H
 
-#define INIT(binDatabase) , #binDatabase, __FILE__, __func__, __LINE__
-#define INIT_ARGS , const char* name, const char* filename, const char* funcname, size_t line
-#define INIT_DEBUG_VARS(binDatabase) (*binDatabase)->name = name; (*binDatabase)->filename = filename; (*binDatabase)->funcname = funcname; (*binDatabase)->line = line;
-#define DUMP(binDatabase) binDatabase, __FILE__, __func__, __LINE__
+#define INIT_DB(binDatabase) , #binDatabase, __FILE__, __func__, __LINE__
+#define INIT_ARGS_DB , const char* name, const char* filename, const char* funcname, size_t line
+#define INIT_DEBUG_VARS_DB(binDatabase) (*binDatabase)->name = name; (*binDatabase)->filename = filename; (*binDatabase)->funcname = funcname; (*binDatabase)->line = line;
+#define DUMP_DB(binDatabase) binDatabase, __FILE__, __func__, __LINE__
 
 const int BIG_ARR_ELEM_CAPACITY = 128;
 const int BIG_ARR_BEG_CAPACITY  = 4;
@@ -35,7 +35,7 @@ struct BinDatabase{
     int nodes_amount;       ///< amount of nodes in tree
 };
 
-enum Errors{
+enum ErrorsDB{
     NO_ERROR,
     NULL_VALUE_INSERTED,
     NO_SUCH_FILE,
@@ -43,6 +43,9 @@ enum Errors{
     FAT_FEATURE,
     FILE_NOT_OPEN,
     CYCLE_IN_TREE,
+    UNKNOWN_MODE,
+    ADD_NODE,
+    NO_OBJECT_IN_DB,
 };
 
 enum Emptiness{
@@ -54,6 +57,7 @@ enum Mode{
     GUESS,
     DEFINITION,
     DIFFERENCE,
+    DUMP,
 };
 
 int playAkinator(const char* db_filename);

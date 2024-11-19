@@ -9,10 +9,9 @@
 
 #include "../include/akinator.h"
 #include "../include/akinator_dump.h"
+#include "../lib/stack/stack_hcpp/stack.h"
 
-//! TODO: читалка, запись в бд, 1) отгадывание и доб 2) определение объекта 3) разница между объектами 4) показать бд
-
-static int databaseCtor(const char* db_filename, BinDatabase** database_tree INIT_ARGS);
+static int databaseCtor(const char* db_filename, BinDatabase** database_tree INIT_ARGS_DB);
 static int structRoot(BinDatabase** database_tree, char* database_txt);
 static int structDatabase(BinDatabase** database_tree, char** database_txt, Node* parent);
 static int readFeature(BinDatabase** database_tree, char* database_txt, char** feature);
@@ -35,17 +34,31 @@ static void fprintfnTab(FILE* fp, int n);
 
 static void printIntro();
 static int getMode();
+static int processMode(int mode, BinDatabase* database);
 static void clearBuffer();
 
+static int playGuess(BinDatabase* database, Node* node);
+static int addNode(BinDatabase* database, Node* node);
+static int getAns();
+
+static int tellDefinition(BinDatabase* database);
+static int findNode(Node* node, char* object, Node** required_node, Stack* path);
+static int printObjectFeatures(Node* node, Stack* path, char* object);
+
+static void reverseStack(Stack* stk);
+static void fromStkToStk(Stack* stk1, Stack* stk2);
+
+static int printDifferences(BinDatabase* database, Stack* path1, char* object1, Stack* path2, char* object2);
+static int tellDifference(BinDatabase* database);
+
 int playAkinator(const char* db_filename){
-    setlocale(LC_ALL,"Rus");
+    assert(db_filename);
 
     BinDatabase* db = NULL;
-    databaseCtor(db_filename, &db INIT(db));
+    databaseCtor(db_filename, &db INIT_DB(db));
 
     printIntro();
-    int mode = getMode();
-    printf("mode - %d\n", mode);
+    processMode(getMode(), db);
 
     return NO_ERROR;
 }
@@ -54,8 +67,9 @@ static void printIntro(){
     printf("Добро пожаловать в Akinator\n");
     printf("Что вы желаете:\n");
     printf("[О]тгадывать\n");
-    printf("[Д]ать определение\n");
+    printf("[D]ать определение\n");
     printf("[С]равнить объекты\n");
+    printf("[P]окажи базу данных!\n");
 }
 
 static int getMode(){
@@ -63,12 +77,22 @@ static int getMode(){
     fgets(mode, 2, stdin);
 
     while (true){
-        printf("MODE[0]: %d\n", mode[0]);
-        printf("MODE[1]: %d\n", mode[1]);
-
-        if (strcmp(mode, "О") == 0 || strcmp(mode, "о") == 0) return GUESS;
-        if (strcmp(mode, "Д") == 0 || strcmp(mode, "д") == 0) return DEFINITION;
-        if (strcmp(mode, "С") == 0 || strcmp(mode, "с") == 0) return DIFFERENCE;
+        if (strcmp(mode, "O") == 0 || strcmp(mode, "o") == 0){
+            clearBuffer();
+            return GUESS;
+        }
+        if (strcmp(mode, "D") == 0 || strcmp(mode, "d") == 0){
+            clearBuffer();
+            return DEFINITION;
+        }
+        if (strcmp(mode, "C") == 0 || strcmp(mode, "c") == 0){
+            clearBuffer();
+            return DIFFERENCE;
+        }
+        if (strcmp(mode, "P") == 0 || strcmp(mode, "p") == 0){
+            clearBuffer();
+            return DUMP;
+        }
 
         clearBuffer();
         printf("Такого режима нет, попробуйте еще раз:\n");
@@ -76,22 +100,358 @@ static int getMode(){
     }
 }
 
+static int processMode(int mode, BinDatabase* database){
+    assert(database);
+
+    switch(mode){
+        case(GUESS):{
+            playGuess(database, database->root);
+            return NO_ERROR;
+        }
+        case(DEFINITION):{
+            tellDefinition(database);
+            return NO_ERROR;
+        }
+        case(DIFFERENCE):{
+            tellDifference(database);
+            return NO_ERROR;
+        }
+        case(DUMP):{
+            binDatabaseDump(DUMP_DB(database), 0);
+            return NO_ERROR;
+        }
+        default:{
+            return UNKNOWN_MODE;
+        }
+    }
+}
+
 static void clearBuffer(){
     int character = 0;
     while ((character = getchar()) != '\n' && character != EOF){}
 }
+
+//!  |
+//! \|/
+//!         tell difference
+
+static int tellDifference(BinDatabase* database){
+    assert(database);
+
+    char object1[BIG_ARR_ELEM_CAPACITY] = {};
+    char object2[BIG_ARR_ELEM_CAPACITY] = {};
+    printf("Какие объекты вы хотите сравнить?\n");
+
+    printf("Объект 1: ");
+    scanf("%s", object1);
+    clearBuffer();
+
+    printf("Объект 2: ");
+    scanf("%s", object2);
+    clearBuffer();
+
+    Node* req_node1 = NULL;
+    Stack* path1 = stackCtor(INIT(path1) 0);
+    findNode(database->root, object1, &req_node1, path1);
+    if (req_node1 == NULL){
+        printf("Нет такого объекта в базе данных!\n");
+        return NO_OBJECT_IN_DB;
+    }
+
+    Node* req_node2 = NULL;
+    Stack* path2 = stackCtor(INIT(path2) 0);
+    findNode(database->root, object2, &req_node2, path2);
+    if (req_node2 == NULL){
+        printf("Нет такого объекта в базе данных!\n");
+        return NO_OBJECT_IN_DB;
+    }
+
+    printDifferences(database, path1, object1, path2, object2);
+    stackDtor(&path1);
+    stackDtor(&path2);
+
+    return NO_ERROR;
+}
+
+static int printDifferences(BinDatabase* database, Stack* path1, char* object1, Stack* path2, char* object2){
+    assert(database);
+    assert(path1);
+    assert(object1);
+    assert(path2);
+    assert(object2);
+
+    reverseStack(path1);
+    reverseStack(path2);
+
+    printf("%s и %s оба:\n", object1, object2);
+
+    int step1 = 1;
+    int step2 = 2;
+    Node* ptr1 = database->root;
+    Node* ptr2 = database->root;
+    while (true){
+        if (stackPop(path1, &step1) == 4) return NO_ERROR;
+        stackPop(path2, &step2);
+
+        if (step1 != step2){
+            break;
+        }
+        if (step1 == 0){
+            printf("не %s, ", ptr1->feature);
+            ptr1 = ptr1->right;
+            ptr2 = ptr2->right;
+        }
+        else{
+            printf("%s, ", ptr1->feature);
+            ptr1 = ptr1->left;
+            ptr2 = ptr2->left;
+        }
+    }
+
+    printf("\nНо:\n");
+    stackPush(path1, step1);
+    stackPush(path2, step2);
+    printObjectFeatures(ptr1, path1, object1);
+    printObjectFeatures(ptr2, path2, object2);
+
+    return NO_ERROR;
+}
+
+//! /|\
+//!  |
+//!         tell difference
+
+
+
+//!  |
+//! \|/
+//!         tell definition
+
+static int tellDefinition(BinDatabase* database){
+    assert(database);
+
+    char object[BIG_ARR_ELEM_CAPACITY] = {};
+    printf("Что за объект вы хотите найти?\n");
+    scanf("%s", object);
+    clearBuffer();
+
+    Node* required_node = NULL;
+    Stack* path = stackCtor(INIT(PATH) 0);
+    findNode(database->root, object, &required_node, path);
+
+    if (required_node == NULL){
+        printf("Нет такого объекта в базе данных!\n");
+
+        return NO_OBJECT_IN_DB;
+    }
+
+    printObjectFeatures(database->root, path, object);
+    stackDtor(&path);
+
+    return NO_ERROR;
+}
+
+static int printObjectFeatures(Node* node, Stack* path, char* object){
+    assert(node);
+    assert(path);
+    assert(object);
+
+    printf("%s ", object);
+
+    reverseStack(path);
+    int step = 0;
+    Node* ptr = node;
+    while(stackPop(path, &step) != 4){
+        if (step == 0){
+            printf("не %s, ", ptr->feature);
+            ptr = ptr->right;
+        }
+        else{
+            printf("%s, ", ptr->feature);
+            ptr = ptr->left;
+        }
+    }
+    printf("\n");
+
+    return NO_ERROR;
+}
+
+static void reverseStack(Stack* stk){
+    Stack* tmp1 = stackCtor(INIT(tmp1) 0);
+    Stack* tmp2 = stackCtor(INIT(tmp2) 0);
+
+    fromStkToStk(stk, tmp1);
+    fromStkToStk(tmp1, tmp2);
+    fromStkToStk(tmp2, stk);
+
+    stackDtor(&tmp1);
+    stackDtor(&tmp2);
+}
+
+static void fromStkToStk(Stack* stk1, Stack* stk2){
+    assert(stk1);
+    assert(stk2);
+
+    while (true){
+        int tmp = 0;
+
+        if (stackPop(stk1, &tmp) == 4){
+            break;
+        }
+        stackPush(stk2, tmp);
+    }
+}
+
+static int findNode(Node* node, char* object, Node** required_node, Stack* path){
+    assert(node);
+    assert(object);
+    assert(required_node);
+    assert(path);
+
+    if ((*required_node) != NULL) return NO_ERROR;
+
+    if (node->left == NULL){
+        if (strcmp(object, node->feature) == 0){
+            (*required_node) = node;
+        }
+
+        return NO_ERROR;
+    }
+
+    stackPush(path, 1);
+    findNode(node->left, object, required_node, path);
+    if ((*required_node) != NULL) return NO_ERROR;
+    int tmp = 0;
+    stackPop(path, &tmp);
+
+    stackPush(path, 0);
+    findNode(node->right, object, required_node, path);
+    if ((*required_node) != NULL) return NO_ERROR;
+    stackPop(path, &tmp);
+
+    return NO_ERROR;
+}
+
+
+
+//! /|\
+//!  |
+//!         tell definition
+
+//!  |
+//! \|/
+//!         play guess
+
+static int playGuess(BinDatabase* database, Node* node){
+    assert(node);
+    assert(database);
+
+    if (node->left != NULL){
+        printf("%s ? [y/n]\n", node->feature);
+        if (getAns()){
+            playGuess(database, node->left);
+        }
+        else{
+            playGuess(database, node->right);
+        }
+
+        return NO_ERROR;
+    }
+
+    printf("Это: %s ? [y/n]\n", node->feature);
+    if (getAns()){
+        printf("Я умнее тебя, у меня памяти 16 мегабайт\n");
+
+        return NO_ERROR;
+    }
+
+    addNode(database, node);
+    printf("Хотите сохранить базу данных? [y/n]\n");
+    if (getAns()){
+        saveDatabase("database/saved_db.db", database);
+    }
+    return NO_ERROR;
+}
+
+static int addNode(BinDatabase* database, Node* node){
+    assert(database);
+
+    char object[BIG_ARR_ELEM_CAPACITY] = {};
+    char object_shell[BIG_ARR_ELEM_CAPACITY + 1] = {};
+    char feature[BIG_ARR_ELEM_CAPACITY] = {};
+    char feature_shell[BIG_ARR_ELEM_CAPACITY + 1] = {};
+
+    printf("Кого вы загадали?\n");
+    scanf("%s", object);
+    printf("Чем %s отличиается от %s ?\n", object, node->feature);
+    scanf("%s", feature);
+    clearBuffer();
+
+    object_shell[0] = '"';
+    strcpy(object_shell + 1, object);
+    object_shell[strlen(object_shell)] = '"';
+
+    feature_shell[0] = '"';
+    strcpy(feature_shell + 1, feature);
+    feature_shell[strlen(feature_shell)] = '"';
+
+    char* object_ptr = NULL;
+    char* feature_ptr = NULL;
+    readFeature(&database, object_shell, &object_ptr);
+    readFeature(&database, feature_shell, &feature_ptr);
+
+    Node* object_node = NULL;
+    createNode(&object_node, object_ptr);
+    Node* old_node = NULL;
+    createNode(&old_node, node->feature);
+
+    node->feature = feature_ptr;
+    node->left = object_node;
+    node->right = old_node;
+    database->nodes_amount += 2;
+
+    return NO_ERROR;
+
+}
+
+static int getAns(){
+    int character = getchar();
+
+    while (true){
+        if (character == 'y'){
+            clearBuffer();
+            return 1;
+        }
+        if (character == 'n'){
+            clearBuffer();
+            return 0;
+        }
+
+        printf("Нет таких вариантов ответа");
+        clearBuffer();
+        character = getchar();
+    }
+}
+
+
+//! /|\
+//!  |
+//!         play guess
+
+
+
 //!  |
 //! \|/
 //!         read database from file
 
-static int databaseCtor(const char* db_filename, BinDatabase** database_tree INIT_ARGS){
+static int databaseCtor(const char* db_filename, BinDatabase** database_tree INIT_ARGS_DB){
     assert(db_filename);
     assert(database_tree);
 
     char* database_txt = NULL;
     (*database_tree) = (BinDatabase*)calloc(1, sizeof(BinDatabase));
 
-    INIT_DEBUG_VARS(database_tree);
+    INIT_DEBUG_VARS_DB(database_tree);
 
     readFile(db_filename, &database_txt);
     bigArrayCtor(database_tree);

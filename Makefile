@@ -1,5 +1,5 @@
 Headers := include/akinator.h include/akinator_dump.h
-Objects := obj/main.o obj/akinator.o obj/akinator_dump.o
+Objects := obj/main.o obj/akinator.o obj/akinator_dump.o obj/stack.o
 
 akinator.out: ${Objects} ${Headers}
 	g++ ${Objects} -o akinator.out
@@ -12,6 +12,9 @@ obj/akinator.o: src/akinator.cpp ${Headers}
 
 obj/akinator_dump.o: src/akinator_dump.cpp ${Headers}
 	g++ -c src/akinator_dump.cpp -o obj/akinator_dump.o
+
+obj/stack.o: lib/stack/stack_hcpp/stack.cpp ${Headers}
+	g++ -c lib/stack/stack_hcpp/stack.cpp -o obj/stack.o
 
 run:
 	./akinator.out
