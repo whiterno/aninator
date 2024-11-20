@@ -1,5 +1,7 @@
 #include <assert.h>
 
+#include "../include/stack_utils.h"
+
 #include "../lib/stack/stack_hcpp/stack.h"
 
 void reverseStack(Stack* stk){
