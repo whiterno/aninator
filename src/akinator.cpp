@@ -11,6 +11,7 @@
 #include "../include/akinator_dump.h"
 #include "../lib/stack/stack_hcpp/stack.h"
 
+// read_database
 static int databaseCtor(const char* db_filename, BinDatabase** database_tree INIT_ARGS_DB);
 static int structRoot(BinDatabase** database_tree, char* database_txt);
 static int structDatabase(BinDatabase** database_tree, char** database_txt, Node* parent);
@@ -18,36 +19,45 @@ static int readFeature(BinDatabase** database_tree, char* database_txt, char** f
 static int structRightTree(BinDatabase** database_tree, char** database_txt, Node* parent);
 static int structLeftTree(BinDatabase** database_tree, char** database_txt, Node* parent);
 
+//big_array
 static int bigArrayCtor(BinDatabase** database_tree);
 static int addToBigArray(BinDatabase** database_tree, char* database_txt, char** feature, int feature_len);
 
+//node_utils
 static int createNode(Node** node, char* feature);
 static int fillNode(BinDatabase** database_tree, char** database_txt, Node** node);
 static int isNodeEmpty(char* begin);
+static int findNode(Node* node, char* object, Node** required_node, Stack* path);
+static int addNode(BinDatabase* database, Node* node);
 
+//utils
 static int readFile(const char* db_filename, char** database);
 static size_t fileSize(const char* filename);
+static void fprintfnTab(FILE* fp, int n);
+static void clearBuffer();
 
+//save_database
 static int saveDatabase(const char* filename, BinDatabase* database);
 static int writeDatabase(FILE* fp, Node* node, int tabs);
-static void fprintfnTab(FILE* fp, int n);
 
+//akinator
 static void printIntro();
 static int getMode();
 static int processMode(int mode, BinDatabase* database);
-static void clearBuffer();
 
+//guess_mode
 static int playGuess(BinDatabase* database, Node* node);
-static int addNode(BinDatabase* database, Node* node);
 static int getAns();
 
+//definition_mode
 static int tellDefinition(BinDatabase* database);
-static int findNode(Node* node, char* object, Node** required_node, Stack* path);
 static int printObjectFeatures(Node* node, Stack* path, char* object);
 
+//stack_utils
 static void reverseStack(Stack* stk);
 static void fromStkToStk(Stack* stk1, Stack* stk2);
 
+//difference_mode
 static int printDifferences(BinDatabase* database, Stack* path1, char* object1, Stack* path2, char* object2);
 static int tellDifference(BinDatabase* database);
 
@@ -411,7 +421,6 @@ static int addNode(BinDatabase* database, Node* node){
     database->nodes_amount += 2;
 
     return NO_ERROR;
-
 }
 
 static int getAns(){
