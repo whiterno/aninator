@@ -15,7 +15,7 @@ int readFile(const char* db_filename, char** database_txt){
     int fp = open(db_filename, O_RDONLY);
 
     if (fp == -1){
-        return NO_SUCH_FILE;
+        return FILE_NOT_OPEN;
     }
 
     (*database_txt) = (char*)calloc(file_size + 1, sizeof(char));

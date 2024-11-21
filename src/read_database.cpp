@@ -12,6 +12,7 @@
 static int structRoot(BinDatabase** database_tree, char* database_txt);
 static int structDatabase(BinDatabase** database_tree, char** database_txt, Node* parent);
 static int structTree(BinDatabase** database_tree, char** database_txt, Node* parent, int tree_dest);
+static int nodesDtor(Node* node);
 
 int databaseCtor(const char* db_filename, BinDatabase** database_tree INIT_ARGS_DB){
     assert(db_filename);
@@ -42,6 +43,36 @@ int readFeature(BinDatabase** database_tree, char* database_txt, char** feature)
     }
 
     addToBigArray(database_tree, database_txt, feature, feature_len);
+
+    return NO_ERROR;
+}
+
+int databaseDtor(BinDatabase** database){
+    assert(database);
+
+    nodesDtor((*database)->root);
+    bigArrayDtor(*database);
+
+    free(*database);
+    *database = NULL;
+
+    return NO_ERROR;
+}
+
+static int nodesDtor(Node* node){
+    assert(node);
+
+    if (node->left != NULL){
+        nodesDtor(node->left);
+        nodesDtor(node->right);
+    }
+
+    node->feature   = NULL;
+    node->parent    = NULL;
+    node->left      = NULL;
+    node->right     = NULL;
+
+    free(node);
 
     return NO_ERROR;
 }

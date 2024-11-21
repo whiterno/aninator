@@ -24,7 +24,9 @@ int playAkinator(const char* db_filename){
     databaseCtor(db_filename, &db INIT_DB(db));
 
     printIntro();
-    processMode(getMode(), db);
+    if (processMode(getMode(), db) == UNKNOWN_MODE) return UNKNOWN_MODE;
+
+    databaseDtor(&db);
 
     return NO_ERROR;
 }

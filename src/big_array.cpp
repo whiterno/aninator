@@ -41,3 +41,13 @@ int addToBigArray(BinDatabase** database_tree, char* database_txt, char** featur
 
     return NO_ERROR;
 }
+
+int bigArrayDtor(BinDatabase* database){
+    assert(database);
+
+    for (int i = 0; i < database->big_array_capacity; i++){
+        free(database->big_array[i].beg);
+    }
+
+    return NO_ERROR;
+}
