@@ -17,15 +17,8 @@ int tellDefinition(BinDatabase* database){
     scanf("%s", object);
     clearBuffer();
 
-    Node* required_node = NULL;
     Stack* path = stackCtor(INIT(PATH) 0);
-    findNode(database->root, object, &required_node, path);
-
-    if (required_node == NULL){
-        printf("Нет такого объекта в базе данных!\n");
-
-        return NO_OBJECT_IN_DB;
-    }
+    findPath(database, object, path);
 
     printObjectFeatures(database->root, path, object);
     stackDtor(&path);
@@ -33,7 +26,7 @@ int tellDefinition(BinDatabase* database){
     return NO_ERROR;
 }
 
-int printObjectFeatures(Node* node, Stack* path, char* object){
+int printObjectFeatures(Node* node, Stack* path, const char* object){
     assert(node);
     assert(path);
     assert(object);

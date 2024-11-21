@@ -16,13 +16,13 @@ int createNode(Node** node, char* feature){
         return NULL_VALUE_INSERTED;
     }
 
-    *node = (Node*)calloc(1, sizeof(Node));
+    *node               = (Node*)calloc(1, sizeof(Node));
 
-    (*node)->left = NULL;
-    (*node)->right = NULL;
-    (*node)->parent = NULL;
+    (*node)->left       = NULL;
+    (*node)->right      = NULL;
+    (*node)->parent     = NULL;
 
-    (*node)->feature = feature;
+    (*node)->feature    = feature;
 
     return NO_ERROR;
 }
@@ -33,7 +33,7 @@ int fillNode(BinDatabase** database_tree, char** database_txt, Node** node){
     assert(node);
 
     (*database_txt) = strchr((*database_txt), '"');
-    char* feature = NULL;
+    char* feature   = NULL;
     readFeature(database_tree, *database_txt, &feature);
     (*database_txt) = strchr((*database_txt) + 1, '"') + 1;
 
@@ -55,7 +55,7 @@ int isNodeEmpty(char* begin){
     return EMPTY;
 }
 
-int findNode(Node* node, char* object, Node** required_node, Stack* path){
+int findNode(Node* node, const char* object, Node** required_node, Stack* path){
     assert(node);
     assert(object);
     assert(required_node);
@@ -88,43 +88,49 @@ int findNode(Node* node, char* object, Node** required_node, Stack* path){
 int addNode(BinDatabase* database, Node* node){
     assert(database);
 
-    char object[BIG_ARR_ELEM_CAPACITY] = {};
-    char object_shell[BIG_ARR_ELEM_CAPACITY + 1] = {};
-    char feature[BIG_ARR_ELEM_CAPACITY] = {};
-    char feature_shell[BIG_ARR_ELEM_CAPACITY + 1] = {};
+    char object[BIG_ARR_ELEM_CAPACITY + 1]  = {};
+    char feature[BIG_ARR_ELEM_CAPACITY + 1] = {};
 
     printf("Кого вы загадали?\n");
-    scanf("%s", object);
+    scanf("%s", object + 1);
     printf("Чем %s отличиается от %s ?\n", object, node->feature);
-    scanf("%s", feature);
+    scanf("%s", feature + 1);
     clearBuffer();
 
-    // TODO:
-    // object[0] = '"';
-    // object[strlen(object_shell)] = '"';
+    object[0]               = '"';
+    object[strlen(object)]  = '"';
+    feature[0]              = '"';
+    feature[strlen(feature)] = '"';
 
-    object_shell[0] = '"';
-    strcpy(object_shell + 1, object);
-    object_shell[strlen(object_shell)] = '"';
+    char* object_ptr    = NULL;
+    char* feature_ptr   = NULL;
+    readFeature(&database, object, &object_ptr);
+    readFeature(&database, feature, &feature_ptr);
 
-    feature_shell[0] = '"';
-    strcpy(feature_shell + 1, feature);
-    feature_shell[strlen(feature_shell)] = '"';
-
-    char* object_ptr = NULL;
-    char* feature_ptr = NULL;
-    readFeature(&database, object_shell, &object_ptr);
-    readFeature(&database, feature_shell, &feature_ptr);
-
-    Node* object_node = NULL;
+    Node* object_node   = NULL;
     createNode(&object_node, object_ptr);
-    Node* old_node = NULL;
+    Node* old_node      = NULL;
     createNode(&old_node, node->feature);
 
-    node->feature = feature_ptr;
-    node->left = object_node;
-    node->right = old_node;
+    node->feature           = feature_ptr;
+    node->left              = object_node;
+    node->right             = old_node;
     database->nodes_amount += 2;
+
+    return NO_ERROR;
+}
+
+int findPath(BinDatabase* database, const char object[], Stack* path){
+    assert(database);
+    assert(object);
+    assert(path);
+
+    Node* req_node = NULL;
+    findNode(database->root, object, &req_node, path);
+    if (req_node == NULL){
+        printf("Нет такого объекта в базе данных!\n");
+        return NO_OBJECT_IN_DB;
+    }
 
     return NO_ERROR;
 }

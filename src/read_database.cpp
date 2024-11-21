@@ -9,12 +9,16 @@
 #include "../include/big_array.h"
 #include "../include/node_utils.h"
 
+static int structRoot(BinDatabase** database_tree, char* database_txt);
+static int structDatabase(BinDatabase** database_tree, char** database_txt, Node* parent);
+static int structTree(BinDatabase** database_tree, char** database_txt, Node* parent, int tree_dest);
+
 int databaseCtor(const char* db_filename, BinDatabase** database_tree INIT_ARGS_DB){
     assert(db_filename);
     assert(database_tree);
 
-    char* database_txt = NULL;
-    (*database_tree) = (BinDatabase*)calloc(1, sizeof(BinDatabase));
+    char* database_txt  = NULL;
+    (*database_tree)    = (BinDatabase*)calloc(1, sizeof(BinDatabase));
 
     INIT_DEBUG_VARS_DB(database_tree);
 
@@ -25,17 +29,34 @@ int databaseCtor(const char* db_filename, BinDatabase** database_tree INIT_ARGS_
     return NO_ERROR;
 }
 
-int structRoot(BinDatabase** database_tree, char* database_txt){
+int readFeature(BinDatabase** database_tree, char* database_txt, char** feature){
+    assert(database_tree);
+    assert(database_txt);
+    assert(feature);
+
+    char* end       = strchr(database_txt + 1, '"');
+    int feature_len = end - database_txt;
+
+    if (feature_len > BIG_ARR_ELEM_CAPACITY){
+        return FAT_FEATURE;
+    }
+
+    addToBigArray(database_tree, database_txt, feature, feature_len);
+
+    return NO_ERROR;
+}
+
+static int structRoot(BinDatabase** database_tree, char* database_txt){
     assert(database_tree);
     assert(database_txt);
 
     database_txt = strchr(database_txt, '{');
     if (database_txt == NULL || isNodeEmpty(database_txt + 1)) return NO_DATA_BASE;
 
-    database_txt = strchr(database_txt, '"');
-    char* feature = NULL;
+    database_txt    = strchr(database_txt, '"');
+    char* feature   = NULL;
     readFeature(database_tree, database_txt, &feature);
-    database_txt = strchr(database_txt + 1, '"') + 1;
+    database_txt    = strchr(database_txt + 1, '"') + 1;
 
     Node* node = NULL;
     createNode(&node, feature);
@@ -48,7 +69,7 @@ int structRoot(BinDatabase** database_tree, char* database_txt){
     return NO_ERROR;
 }
 
-int structDatabase(BinDatabase** database_tree, char** database_txt, Node* parent){
+static int structDatabase(BinDatabase** database_tree, char** database_txt, Node* parent){
     assert(database_tree);
     assert(database_txt);
     assert(parent);
@@ -58,59 +79,26 @@ int structDatabase(BinDatabase** database_tree, char** database_txt, Node* paren
 
     if (close_br < open_br || open_br == NULL) return NO_ERROR;
 
-    structLeftTree(database_tree, database_txt, parent);
-    structRightTree(database_tree, database_txt, parent);
+    structTree(database_tree, database_txt, parent, LEFT);
+    structTree(database_tree, database_txt, parent, RIGHT);
 
     return NO_ERROR;
 }
 
-int readFeature(BinDatabase** database_tree, char* database_txt, char** feature){
-    assert(database_tree);
-    assert(database_txt);
-    assert(feature);
-
-    char* end = strchr(database_txt + 1, '"');
-    int feature_len = end - database_txt;
-
-    if (feature_len > BIG_ARR_ELEM_CAPACITY){
-        return FAT_FEATURE;
-    }
-
-    addToBigArray(database_tree, database_txt, feature, feature_len);
-
-    return NO_ERROR;
-}
-
-// TODO: убрать копипаст
-
-int structLeftTree(BinDatabase** database_tree, char** database_txt, Node* parent){
+static int structTree(BinDatabase** database_tree, char** database_txt, Node* parent, int tree_dest){
     assert(database_tree);
     assert(database_txt);
     assert(parent);
 
     Node* node = NULL;
     fillNode(database_tree, database_txt, &node);
-    parent->left = node;
+    if (tree_dest == RIGHT) parent->right = node;
+    else                    parent->left = node;
 
     (*database_tree)->nodes_amount++;
 
-    structDatabase(database_tree, database_txt, parent->left);
-
-    return NO_ERROR;
-}
-
-int structRightTree(BinDatabase** database_tree, char** database_txt, Node* parent){
-    assert(database_tree);
-    assert(database_txt);
-    assert(parent);
-
-    Node* node = NULL;
-    fillNode(database_tree, database_txt, &node);
-    parent->right = node;
-
-    (*database_tree)->nodes_amount++;
-
-    structDatabase(database_tree, database_txt, parent->right);
+    if (tree_dest == RIGHT) structDatabase(database_tree, database_txt, parent->right);
+    else                    structDatabase(database_tree, database_txt, parent->left);
 
     return NO_ERROR;
 }

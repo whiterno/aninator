@@ -7,7 +7,7 @@
 #define DUMP_DB(binDatabase) binDatabase, __FILE__, __func__, __LINE__
 
 const int BIG_ARR_ELEM_CAPACITY = 128;
-const int BIG_ARR_BEG_CAPACITY  = 4;
+const int BIG_ARR_BEG_CAPACITY  = 8;
 
 //! @brief Node structure, that contains pointers on left, right and parent nodes and a feature
 struct Node{
@@ -48,9 +48,18 @@ enum ErrorsDB{
     NO_OBJECT_IN_DB,
 };
 
+enum ErrorsStack{
+    STACK_UNDERFLOW = 4,
+};
+
 enum Emptiness{
     NOT_EMPTY,
     EMPTY,
+};
+
+enum TreeDest{
+    RIGHT,
+    LEFT,
 };
 
 enum Mode{

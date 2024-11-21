@@ -5,6 +5,8 @@
 #include "../include/save_database.h"
 #include "../include/utils.h"
 
+static int writeDatabase(FILE* fp, Node* node, const int tabs);
+
 int saveDatabase(const char* filename, BinDatabase* database){
     assert(filename);
     assert(database);
@@ -17,7 +19,7 @@ int saveDatabase(const char* filename, BinDatabase* database){
     return NO_ERROR;
 }
 
-int writeDatabase(FILE* fp, Node* node, int tabs){
+static int writeDatabase(FILE* fp, Node* node, const int tabs){
     assert(fp);
     assert(node);
 

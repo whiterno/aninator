@@ -8,8 +8,8 @@
 int bigArrayCtor(BinDatabase** database_tree){
     assert(database_tree);
 
-    (*database_tree)->big_array_capacity = BIG_ARR_BEG_CAPACITY;
-    (*database_tree)->big_array = (BigArrElem*)calloc(BIG_ARR_BEG_CAPACITY, sizeof(BigArrElem));
+    (*database_tree)->big_array_capacity    = BIG_ARR_BEG_CAPACITY;
+    (*database_tree)->big_array             = (BigArrElem*)calloc(BIG_ARR_BEG_CAPACITY, sizeof(BigArrElem));
     for (int i = 0; i < BIG_ARR_BEG_CAPACITY; i++){
         (*database_tree)->big_array[i].beg = (char*)calloc(BIG_ARR_ELEM_CAPACITY, sizeof(char));
         (*database_tree)->big_array[i].end = (*database_tree)->big_array[i].beg;
@@ -18,7 +18,7 @@ int bigArrayCtor(BinDatabase** database_tree){
     return NO_ERROR;
 }
 
-int addToBigArray(BinDatabase** database_tree, char* database_txt, char** feature, int feature_len){
+int addToBigArray(BinDatabase** database_tree, char* database_txt, char** feature, const int feature_len){
     assert(database_tree);
     assert(database_txt);
     assert(feature);
@@ -33,13 +33,11 @@ int addToBigArray(BinDatabase** database_tree, char* database_txt, char** featur
         strncpy((*database_tree)->big_array[i].end + 1, database_txt + 1, feature_len - 1);
         (*feature) = (*database_tree)->big_array[i].end + 1;
 
-        (*database_tree)->big_array[i].end = (*database_tree)->big_array[i].end + feature_len;
+        (*database_tree)->big_array[i].end  = (*database_tree)->big_array[i].end + feature_len;
         *(*database_tree)->big_array[i].end = '\0';
 
         return NO_ERROR;
     }
-
-    //! TODO: сделать расширяемый bigArray
 
     return NO_ERROR;
 }

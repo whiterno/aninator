@@ -15,7 +15,7 @@
 
 static void printIntro();
 static int getMode();
-static int processMode(int mode, BinDatabase* database);
+static int processMode(const int mode, BinDatabase* database);
 
 int playAkinator(const char* db_filename){
     assert(db_filename);
@@ -66,7 +66,7 @@ static int getMode(){
     }
 }
 
-static int processMode(int mode, BinDatabase* database){
+static int processMode(const int mode, BinDatabase* database){
     assert(database);
 
     switch(mode){

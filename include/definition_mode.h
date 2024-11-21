@@ -4,6 +4,6 @@
 #include "../lib/stack/stack_hcpp/stack.h"
 
 int tellDefinition(BinDatabase* database);
-int printObjectFeatures(Node* node, Stack* path, char* object);
+int printObjectFeatures(Node* node, Stack* path, const char* object);
 
 #endif

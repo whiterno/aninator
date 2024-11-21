@@ -7,6 +7,8 @@
 #include "../include/utils.h"
 #include "../include/save_database.h"
 
+static int getAns();
+
 int playGuess(BinDatabase* database, Node* node){
     assert(node);
     assert(database);
@@ -38,7 +40,7 @@ int playGuess(BinDatabase* database, Node* node){
     return NO_ERROR;
 }
 
-int getAns(){
+static int getAns(){
     int character = getchar();
 
     while (true){
