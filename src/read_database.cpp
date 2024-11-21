@@ -81,6 +81,8 @@ int readFeature(BinDatabase** database_tree, char* database_txt, char** feature)
     return NO_ERROR;
 }
 
+// TODO: убрать копипаст
+
 int structLeftTree(BinDatabase** database_tree, char** database_txt, Node* parent){
     assert(database_tree);
     assert(database_txt);

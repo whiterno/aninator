@@ -28,8 +28,6 @@ int writeDatabase(FILE* fp, Node* node, int tabs){
         fprintf(fp, "\n");
         writeDatabase(fp, node->left, tabs + 1);
         writeDatabase(fp, node->right, tabs + 1);
-    }
-    if (node->left != NULL){
         fprintfnTab(fp, tabs);
         fprintf(fp, "}\n");
     }

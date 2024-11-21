@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
 
 #include "../include/akinator.h"
 #include "../include/akinator_dump.h"
@@ -11,6 +12,8 @@ static FILE* dump_html = fopen(DUMP_HTML_FILENAME, "w");
 static const char* errorToString(int error);
 static int createDotFile(Node* root);
 static int createNodesAndEdges(FILE* dump_dot, Node* node, TreeDumpAttributes* attrs);
+static int writeNode(FILE* dump_dot, Node* node, TreeDumpAttributes* attrs, int node_serial_number);
+static int writeEdge(FILE* dump_dot, TreeDumpAttributes* attrs, int node_serial_number, const char label[]);
 
 
 int binDatabaseDump(BinDatabase* tree, const char filename[], const char funcname[], const size_t line, int error){
@@ -73,15 +76,44 @@ static int createNodesAndEdges(FILE* dump_dot, Node* node, TreeDumpAttributes* a
     }
 
     int node_serial_number = node_counter;
-    fprintf(dump_dot, "\tnode_%d [color = \"%s\", style = \"filled\", shape = \"%s\", fillcolor = \"%s\", label = \"{%s | {<fl%d> left | <fr%d> right}}\"]\n", node_serial_number, attrs->node_color, attrs->node_shape, attrs->node_fillcolor, node->feature, node_serial_number, node_serial_number);
+    writeNode(dump_dot, node, attrs, node_serial_number);
     if (node->left){
-        fprintf(dump_dot, "\tnode_%d: <fl%d> -> node_%d [color = \"%s\", arrowhead = \"%s\"]\n", node_serial_number, node_serial_number, --node_counter, attrs->edge_color, attrs->edge_arrowhead);
+        writeEdge(dump_dot, attrs, node_serial_number, "yes");
         createNodesAndEdges(dump_dot, node->left, attrs);
     }
     if (node->right){
-        fprintf(dump_dot, "\tnode_%d: <fr%d> -> node_%d [color = \"%s\", arrowhead = \"%s\"]\n", node_serial_number, node_serial_number, --node_counter, attrs->edge_color, attrs->edge_arrowhead);
+        writeEdge(dump_dot, attrs, node_serial_number, "no");
         createNodesAndEdges(dump_dot, node->right, attrs);
     }
+
+    return NO_ERROR;
+}
+
+static int writeNode(FILE* dump_dot, Node* node, TreeDumpAttributes* attrs, int node_serial_number){
+    assert(node);
+    assert(attrs);
+    assert(dump_dot);
+
+    fprintf(dump_dot, "\tnode_%d [", node_serial_number);
+    fprintf(dump_dot,  "color = \"%s\", ", attrs->node_color);
+    fprintf(dump_dot,  "style = \"filled\", ");
+    fprintf(dump_dot,  "shape = \"%s\", ", attrs->node_shape);
+    fprintf(dump_dot,  "fillcolor = \"%s\", ", attrs->node_fillcolor);
+    fprintf(dump_dot,  "label = \"{%s", node->feature);
+    fprintf(dump_dot,   " | {<fl%d> %p | <fr%d> %p}}\"]\n", node_serial_number, node->left, node_serial_number, node->right);
+
+    return NO_ERROR;
+}
+
+static int writeEdge(FILE* dump_dot, TreeDumpAttributes* attrs, int node_serial_number, const char label[]){
+    assert(dump_dot);
+    assert(attrs);
+    assert(label);
+
+    fprintf(dump_dot, "\tnode_%d: <fl%d> -> node_%d [", node_serial_number, node_serial_number, --node_counter);
+    fprintf(dump_dot,  "color = \"%s\", ", attrs->edge_color);
+    fprintf(dump_dot,  "arrowhead = \"%s\", ", attrs->edge_arrowhead);
+    fprintf(dump_dot,  "label = \"%s\"]\n", label);
 
     return NO_ERROR;
 }

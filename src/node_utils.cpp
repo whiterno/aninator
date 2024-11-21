@@ -99,6 +99,10 @@ int addNode(BinDatabase* database, Node* node){
     scanf("%s", feature);
     clearBuffer();
 
+    // TODO:
+    // object[0] = '"';
+    // object[strlen(object_shell)] = '"';
+
     object_shell[0] = '"';
     strcpy(object_shell + 1, object);
     object_shell[strlen(object_shell)] = '"';

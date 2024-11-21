@@ -55,6 +55,7 @@ int printDifferences(BinDatabase* database, Stack* path1, char* object1, Stack* 
 }
 
 int tellDifference(BinDatabase* database){
+    // TODO: Баги "Комар" "член_яна"
     assert(database);
 
     char object1[BIG_ARR_ELEM_CAPACITY] = {};
@@ -68,6 +69,8 @@ int tellDifference(BinDatabase* database){
     printf("Объект 2: ");
     scanf("%s", object2);
     clearBuffer();
+
+    // TODO: функция нахождения пути
 
     Node* req_node1 = NULL;
     Stack* path1 = stackCtor(INIT(path1) 0);

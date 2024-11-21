@@ -4,6 +4,8 @@
 
 #include "../lib/stack/stack_hcpp/stack.h"
 
+// TODO: удалить это дерьмо нахуй (но оно работает)
+
 void reverseStack(Stack* stk){
     assert(stk);
 
