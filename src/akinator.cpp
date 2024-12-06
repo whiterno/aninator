@@ -41,30 +41,31 @@ static void printIntro(){
 }
 
 static int getMode(){
-    char mode[2] = {};
-    fgets(mode, 2, stdin);
+    char mode = 0;
+
+    scanf(" %c", &mode);
 
     while (true){
-        if (strcmp(mode, "O") == 0 || strcmp(mode, "o") == 0){
+        if (mode == 'o' || mode == 'O'){
             clearBuffer();
             return GUESS;
         }
-        if (strcmp(mode, "D") == 0 || strcmp(mode, "d") == 0){
+        if (mode == 'd' || mode == 'D'){
             clearBuffer();
             return DEFINITION;
         }
-        if (strcmp(mode, "C") == 0 || strcmp(mode, "c") == 0){
+        if (mode == 'c' || mode == 'C'){
             clearBuffer();
             return DIFFERENCE;
         }
-        if (strcmp(mode, "P") == 0 || strcmp(mode, "p") == 0){
+        if (mode == 'p' || mode == 'P'){
             clearBuffer();
             return DUMP;
         }
 
         clearBuffer();
         printf("Такого режима нет, попробуйте еще раз:\n");
-        fgets(mode, 2, stdin);
+        scanf(" %c", &mode);
     }
 }
 
